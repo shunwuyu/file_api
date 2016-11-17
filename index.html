@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HTML5 File APIS</title>
+    <link href="http://cdn.bootcss.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+    <script src="http://cdn.bootcss.com/jquery/2.1.4/jquery.min.js"></script>
+    <style>
+    .list-group{
+        border:2px dashed #ccc;
+        min-height: 100px;
+        padding:10px;
+    }
+
+    .list-group p {
+        color: #ccc;
+        line-height: 100px;
+        font-size: 30px;
+        text-align: center;
+    }
+
+    img{
+        max-width: 100%;
+    }
+
+    #eventstatus {
+        margin-top: 10px;
+    }
+    </style>
+</head>
+<body>
+    <header id="header" class="page-header">
+        <div class="container">
+            <h1>文件列表</h1>
+            <h5>filelist</h5>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="row">
+
+            <ul class="list-group clearfix">
+
+            </ul>
+            <form name="upload">
+                <a href="javascript:void(0);" id="selectbtn" class="btn btn-primary">上传文件</a>
+                <input type="file" name="fileselect" style="display:none;" multiple />
+            </form>
+            <div id="eventstatus"></div>
+        </div>
+    </div>
+    <script type="text/javascript">
+    $(function(){ //page loaded
+        var listGroup = document.querySelector('.list-group'),
+            fileselect = document.forms['upload']['fileselect'],
+            selectBtn = document.getElementById('selectbtn'),
+            eventStatus = document.getElementById('eventstatus');
+
+        selectBtn.addEventListener('click',function() {
+            fileselect.click();
+        },false);
+
+        fileselect.addEventListener('change',displayFileInfo,false);
+        // console.log(listGroup);
+        function displayFileInfo(event) {
+        //    console.log(event);
+            event.preventDefault();
+            event.stopPropagation();
+            // listGroup.innerHTML = '';
+            var files = event.target.files || event.dataTransfer.files;
+            for(var i = 0; i < files.length; i++) {
+                var file = files[i];
+                var li = document.createElement('li'),
+                    img = document.createElement('img'),
+                    url = window.URL.createObjectURL(file),
+                    thumbnailContainer = document.createElement('div'),
+                    progress = document.createElement('div'),
+                    progressBar = document.createElement('div');
+                progressBar.classList.add('progress-bar');
+                progress.classList.add('progress','progress-striped','active');
+                progress.appendChild(progressBar);
+
+                var reader = new FileReader();
+                reader.readAsBinaryString(file);
+                reader.onloadstart = function() {
+                    eventStatus.appendChild(progress);
+                }
+
+                reader.onprogress = function(event) {// 加载进度
+                    var progressStatus = Math.round(event.loaded /  event.total * 100) + '%';
+                    progressBar.style.width = progressStatus;
+                }
+
+                reader.onload = function() {
+                    console.log('读取完成');
+                }
+
+                thumbnailContainer.classList.add('col-md-3');
+                img.src = url;
+                img.classList.add('thumbnail');
+                img.onload = function() {
+                    window.URL.revokeObjectURL(url);
+                }
+                thumbnailContainer.appendChild(img);
+                listGroup.appendChild(thumbnailContainer);
+                //     content = document.createTextNode(
+                //         file.name + '   ' +
+                //         file.type + '   ' +
+                //         fixedFloat(file.size) + '   MB  ' +
+                //         file.lastModifiedDate.toLocaleDateString() + '  ' + file.lastModifiedDate.toLocaleTimeString()
+                //     );
+                // li.classList.add('list-group-item');
+                //     // console.log(file.lastModifiedDate);
+                // li.appendChild(content);
+
+            }
+
+        }
+        /*
+        把一个浮点数，去除2位小数点后的多余小数，并且返回
+        f 传入的参数,浮点数
+        返回 2位小数
+        */
+        function fixedFloat(f) {
+            return parseFloat(f/(1024*1024)).toFixed(2);
+        }
+
+        listGroup.innerHTML = '<p class="hint">拖放文件到这里</p>';
+        listGroup.addEventListener('drop',displayFileInfo ,false);
+            listGroup.addEventListener('dragover',onDragOver,false);
+        function onDragOver(event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    });
+    </script>
+</body>
+</html>
